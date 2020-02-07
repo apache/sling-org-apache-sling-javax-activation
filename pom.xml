@@ -63,8 +63,8 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
             <version>${javax.activation.version}</version>
         </dependency>
         <!-- Compendium 4.2.0 is needed to access BundleTracker -->
