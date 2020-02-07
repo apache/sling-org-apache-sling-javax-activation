@@ -35,7 +35,7 @@
     <description>The Apache Sling javax.activation bundle contributes an OSGi-compatible activation bundle.</description>
     
     <properties>
-        <javax.activation.version>1.1.1</javax.activation.version>
+        <javax.activation.version>1.2.0</javax.activation.version>
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
     </properties>    
 
