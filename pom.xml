@@ -72,9 +72,9 @@
                                 <Bundle-Name>
                                     ${project.name} (No embedded dependencies)
                                 </Bundle-Name>
-                                <Bundle-Version>
-                                    ${project.version}-nodeps
-                                </Bundle-Version>
+                                <Bundle-SymbolicName>
+                                    ${project.artifactId}.nodeps
+                                </Bundle-SymbolicName>
                                 <Bundle-Activator>org.apache.sling.javax.activation.internal.Activator</Bundle-Activator>
                             </instructions>
                         </configuration>
