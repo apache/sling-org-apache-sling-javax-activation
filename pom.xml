@@ -22,19 +22,19 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>34</version>
+        <artifactId>sling-bundle-parent</artifactId>
+        <version>39</version>
         <relativePath/>
     </parent>
-        
+
     <artifactId>org.apache.sling.javax.activation</artifactId>
-    <packaging>bundle</packaging>
     <version>0.1.1-SNAPSHOT</version>
 
     <name>Apache Sling javax.activation bundle</name>
     <description>The Apache Sling javax.activation bundle contributes an OSGi-compatible activation bundle.</description>
     
     <properties>
+        <project.build.outputTimestamp>2019-10-02T08:04:00Z</project.build.outputTimestamp>
         <javax.activation.version>1.2.2</javax.activation.version>
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
     </properties>    
@@ -48,35 +48,63 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
+                <groupId>biz.aQute.bnd</groupId>
+                <artifactId>bnd-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>bundle</id>
-                        <goals><goal>bundle</goal></goals>
+                        <id>bnd-process-nodeps</id>
+                        <goals>
+                            <goal>bnd-process</goal>
+                        </goals>
                         <configuration>
-                            <instructions>
-                                <Bundle-Activator>org.apache.sling.javax.activation.internal.Activator</Bundle-Activator>
-                                <Export-Package>javax.activation;version=${javax.activation.version}</Export-Package>
-                                <Embed-Dependency>*;scope=compile</Embed-Dependency>
-                            </instructions>
+                            <bnd><![CDATA[
+Bundle-Name: ${project.name} (No embedded dependencies)
+Bundle-SymbolicName: ${project.artifactId}.nodeps
+]]>
+                            </bnd>
+                            <manifestPath>${project.build.directory}/nodeps-classes/META-INF/MANIFEST.MF</manifestPath>
+                            <outputDir>${project.build.directory}/nodeps-classes</outputDir>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>nodepsbundle</id>
-                        <goals><goal>bundle</goal></goals>
+                        <id>bnd-process</id>
+                        <configuration>
+                            <bnd><![CDATA[
+-includeresource:@jakarta.activation-[0-9.]*(-SNAPSHOT)?.jar
+# version automatically determined from the MANIFEST.MF of the jakarta.activation.jar
+Export-Package: javax.activation,com.sun.activation.registries,com.sun.activation.viewers
+]]>
+                            </bnd>
+                            <manifestPath>${project.build.directory}/deps-classes/META-INF/MANIFEST.MF</manifestPath>
+                            <outputDir>${project.build.directory}/deps-classes</outputDir>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <configuration>
+                            <classesDirectory>${project.build.directory}/deps-classes</classesDirectory>
+                            <archive>
+                                <manifestFile>${project.build.directory}/deps-classes/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jar-nodeps</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
                         <configuration>
                             <classifier>nodeps</classifier>
-                            <instructions>
-                                <Bundle-Name>
-                                    ${project.name} (No embedded dependencies)
-                                </Bundle-Name>
-                                <Bundle-SymbolicName>
-                                    ${project.artifactId}.nodeps
-                                </Bundle-SymbolicName>
-                                <Bundle-Activator>org.apache.sling.javax.activation.internal.Activator</Bundle-Activator>
-                            </instructions>
+                            <classesDirectory>${project.build.directory}/nodeps-classes</classesDirectory>
+                            <archive>
+                                <manifestFile>${project.build.directory}/nodeps-classes/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
                         </configuration>
                     </execution>
                 </executions>
@@ -90,30 +118,26 @@
             <artifactId>jakarta.activation</artifactId>
             <version>${javax.activation.version}</version>
         </dependency>
-        <!-- Compendium 4.2.0 is needed to access BundleTracker -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
+            <artifactId>org.osgi.annotation.bundle</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
+            <artifactId>org.osgi.framework</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.util.tracker</artifactId>
+            <version>1.5.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-        
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

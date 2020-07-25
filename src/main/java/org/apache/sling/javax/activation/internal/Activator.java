@@ -25,10 +25,12 @@ import java.net.URL;
 import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
 
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
@@ -47,12 +49,13 @@ import org.slf4j.LoggerFactory;
  * </p>
  * 
  */
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
     private static final String MAILCAP_FILE_NAME = "/META-INF/mailcap";
     private static final Logger log = LoggerFactory.getLogger(Activator.class);
 
-    private BundleTracker bundleTracker;
+    private BundleTracker<Void> bundleTracker;
     private OsgiMailcapCommandMap commandMap;
 
     public void start(BundleContext context) throws Exception {
@@ -64,21 +67,21 @@ public class Activator implements BundleActivator {
 
         CommandMap.setDefaultCommandMap(commandMap);
 
-        bundleTracker = new BundleTracker(context, Bundle.ACTIVE | Bundle.UNINSTALLED | Bundle.STOP_TRANSIENT,
-                new BundleTrackerCustomizer() {
+        bundleTracker = new BundleTracker<>(context, Bundle.ACTIVE | Bundle.UNINSTALLED | Bundle.STOP_TRANSIENT,
+                new BundleTrackerCustomizer<Void>() {
 
-                    public void removedBundle(Bundle bundle, BundleEvent event, Object object) {
+                    public void removedBundle(Bundle bundle, BundleEvent event, Void object) {
                         unregisterBundleMailcapEntries(bundle);
                     }
 
-                    public void modifiedBundle(Bundle bundle, BundleEvent event, Object object) {
+                    public void modifiedBundle(Bundle bundle, BundleEvent event, Void object) {
                         unregisterBundleMailcapEntries(bundle);
                         registerBundleMailcapEntries(bundle);
                     }
 
-                    public Object addingBundle(Bundle bundle, BundleEvent event) {
+                    public Void addingBundle(Bundle bundle, BundleEvent event) {
                         registerBundleMailcapEntries(bundle);
-                        return bundle;
+                        return null;
                     }
                 });
 
@@ -94,21 +97,10 @@ public class Activator implements BundleActivator {
         if (mailcapEntry == null)
             return;
 
-        InputStream input = null;
-
-        try {
-            input = mailcapEntry.openStream();
-
+        try (InputStream input = mailcapEntry.openStream()) {
             commandMap.addMailcapEntries(input, bundle);
-
         } catch (IOException e) {
             log.warn("Failed loading " + MAILCAP_FILE_NAME + " from bundle " + bundle, e);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
-                // don't care
-            }
         }
     }
 
