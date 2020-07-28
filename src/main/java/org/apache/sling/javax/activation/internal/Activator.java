@@ -25,12 +25,10 @@ import java.net.URL;
 import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
 
-import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.Constants;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.slf4j.Logger;
@@ -39,17 +37,16 @@ import org.slf4j.LoggerFactory;
 /**
  * The <tt>Activator</tt> locates <tt>activation</tt>-related services defined in <tt>mailcap</tt> files and registers
  * them so they can be used by the Java Activation Framework
- * 
+ *
  * <p>
  * The mailcap entries are expected to be found in a <tt>/META-INF/mailcap</tt> file inside the bundle.
  * </p>
- * 
+ *
  * <p>
  * This implementation does not support the full lookup algorithm specified by the {@link MailcapCommandMap}.
  * </p>
- * 
+ *
  */
-@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
     private static final String MAILCAP_FILE_NAME = "/META-INF/mailcap";
