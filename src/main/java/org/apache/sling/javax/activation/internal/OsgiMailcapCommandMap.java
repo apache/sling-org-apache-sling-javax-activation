@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import com.sun.activation.registries.MailcapFile;
 
 /**
- * The <tt>OsgiMailcapCommandMap</tt> is a <tt>CommandMap</tt> which ensures that {@link DataCommandHandler} classes are
+ * The <tt>OsgiMailcapCommandMap</tt> is a <tt>CommandMap</tt> which ensures that {@link DataContentHandler} classes are
  * loaded by their containing bundles.
  * 
  * <p>
