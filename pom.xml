@@ -24,17 +24,17 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling-bundle-parent</artifactId>
         <version>39</version>
-        <relativePath/>
+        <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.javax.activation</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.2.0</version>
 
     <name>Apache Sling javax.activation bundle</name>
     <description>The Apache Sling javax.activation bundle contributes an OSGi-compatible activation bundle.</description>
     
     <properties>
-        <project.build.outputTimestamp>2019-10-02T08:04:00Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2020-07-28T15:18:40Z</project.build.outputTimestamp>
         <javax.activation.version>1.2.2</javax.activation.version>
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
     </properties>    
@@ -43,7 +43,8 @@
         <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-javax-activation.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-javax-activation.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-javax-activation.git</url>
-    </scm>
+      <tag>org.apache.sling.javax.activation-0.2.0</tag>
+  </scm>
 
     <build>
         <plugins>
