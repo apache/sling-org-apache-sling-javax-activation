@@ -58,8 +58,13 @@
                         </goals>
                         <configuration>
                             <bnd><![CDATA[
-Bundle-Name: ${project.name} (No embedded dependencies)
+Bundle-Name: ${project.name} (Framework Fragment, No embedded dependencies)
 Bundle-SymbolicName: ${project.artifactId}.nodeps
+ExtensionBundle-Activator: org.apache.sling.javax.activation.internal.Activator
+-exportcontents: javax.activation;version="0.0.0",com.sun.activation.registries;version="0.0.0",com.sun.activation.viewers;version="0.0.0"
+Import-Package: !javax.activation,!com.sun.activation.registries,!com.sun.activation.viewers
+Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.1,1.1.1";uses:="javax.activation"
+Fragment-Host: system.bundle;extension:=framework
 ]]>
                             </bnd>
                             <manifestPath>${project.build.directory}/nodeps-classes/META-INF/MANIFEST.MF</manifestPath>
@@ -72,7 +77,9 @@ Bundle-SymbolicName: ${project.artifactId}.nodeps
                             <bnd><![CDATA[
 -includeresource:@jakarta.activation-[0-9.]*(-SNAPSHOT)?.jar
 # version automatically determined from the MANIFEST.MF of the jakarta.activation.jar
+Bundle-Activator: org.apache.sling.javax.activation.internal.Activator
 Export-Package: javax.activation,com.sun.activation.registries,com.sun.activation.viewers
+Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.1,1.1.1,1.2";uses:="javax.activation"
 ]]>
                             </bnd>
                             <manifestPath>${project.build.directory}/deps-classes/META-INF/MANIFEST.MF</manifestPath>
@@ -117,6 +124,7 @@ Export-Package: javax.activation,com.sun.activation.registries,com.sun.activatio
             <groupId>com.sun.activation</groupId>
             <artifactId>jakarta.activation</artifactId>
             <version>${javax.activation.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
