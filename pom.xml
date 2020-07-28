@@ -61,9 +61,9 @@
 Bundle-Name: ${project.name} (Framework Fragment, No embedded dependencies)
 Bundle-SymbolicName: ${project.artifactId}.nodeps
 ExtensionBundle-Activator: org.apache.sling.javax.activation.internal.Activator
-Export-Package: javax.activation;version="0.0.0",com.sun.activation.registries;version="0.0.0",com.sun.activation.viewers;version="0.0.0"
+-exportcontents: javax.activation;version="0.0.0",com.sun.activation.registries;version="0.0.0",com.sun.activation.viewers;version="0.0.0"
 Import-Package: !javax.activation,!com.sun.activation.registries,!com.sun.activation.viewers
-Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.1.1";uses:="javax.activation"
+Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.1,1.1.1";uses:="javax.activation"
 Fragment-Host: system.bundle;extension:=framework
 ]]>
                             </bnd>
@@ -79,7 +79,7 @@ Fragment-Host: system.bundle;extension:=framework
 # version automatically determined from the MANIFEST.MF of the jakarta.activation.jar
 Bundle-Activator: org.apache.sling.javax.activation.internal.Activator
 Export-Package: javax.activation,com.sun.activation.registries,com.sun.activation.viewers
-Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.2";uses:="javax.activation"
+Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Version>="1.1,1.1.1,1.2";uses:="javax.activation"
 ]]>
                             </bnd>
                             <manifestPath>${project.build.directory}/deps-classes/META-INF/MANIFEST.MF</manifestPath>
@@ -108,7 +108,7 @@ Provide-Capability: osgi.contract;osgi.contract=JavaActivation;version:List<Vers
                         </goals>
                         <configuration>
                             <classifier>nodeps</classifier>
-                            <classesDirectory>${project.build.directory}/classes</classesDirectory>
+                            <classesDirectory>${project.build.directory}/nodeps-classes</classesDirectory>
                             <archive>
                                 <manifestFile>${project.build.directory}/nodeps-classes/META-INF/MANIFEST.MF</manifestFile>
                             </archive>
