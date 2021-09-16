@@ -27,10 +27,11 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.activation.CommandInfo;
-import javax.activation.CommandMap;
 import javax.activation.DataContentHandler;
+import javax.activation.MailcapCommandMap;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +48,27 @@ import com.sun.activation.registries.MailcapFile;
  * </p>
  * 
  */
-public class OsgiMailcapCommandMap extends CommandMap {
+public class OsgiMailcapCommandMap extends MailcapCommandMap {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiMailcapCommandMap.class);
 
     private final Map<Bundle, MailcapFile> db = new HashMap<Bundle, MailcapFile>();
     private final Object sync = new Object();
+    private volatile Caller caller = null;
+
+    @Override
+    public void addMailcap(String mailcap) {
+        if (caller == null) {
+            caller = new Caller();
+        }
+        Bundle bundle = caller.get();
+        if (bundle != null) {
+            synchronized(sync) {
+                db.computeIfAbsent(bundle, x -> new MailcapFile())
+                        .appendToMailcap(mailcap);
+            }
+        }
+    }
 
     public void addMailcapEntries(InputStream mailcapFile, Bundle originatingBundle) throws IOException {
 
@@ -232,6 +248,7 @@ public class OsgiMailcapCommandMap extends CommandMap {
         return null;
     }
 
+    @Override
     public String[] getMimeTypes() {
         List<String> mimeTypesList = new ArrayList<String>();
 
@@ -247,6 +264,29 @@ public class OsgiMailcapCommandMap extends CommandMap {
         }
 
         return mimeTypesList.toArray(new String[mimeTypesList.size()]);
+    }
+
+    @Override
+    public String[] getNativeCommands(String mimeType) {
+        List<String> cmdList = new ArrayList<String>();
+        if (mimeType != null) {
+            mimeType = mimeType.toLowerCase(Locale.ENGLISH);
+        }
+
+        synchronized (sync) {
+            for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
+                String[] cmds = entry.getValue().getNativeCommands(mimeType);
+                if (cmds != null) {
+                    for (String cmd : cmds) {
+                        if (!cmdList.contains(cmd)) {
+                            cmdList.add(cmd);
+                        }
+                    }
+                }
+            }
+        }
+
+        return cmdList.toArray(new String[cmdList.size()]);
     }
 
     private DataContentHandler getDataContentHandler(String name, Bundle bundle) {
@@ -275,5 +315,18 @@ public class OsgiMailcapCommandMap extends CommandMap {
         }
 
         return false;
+    }
+
+    private static final class Caller extends SecurityManager {
+        Bundle get() {
+            Class[] stack = getClassContext();
+            for (int i = 0; i < stack.length; i++) {
+                Bundle bundle = FrameworkUtil.getBundle(stack[i]);
+                if (bundle != null && !bundle.equals(FrameworkUtil.getBundle(getClass()))) {
+                    return bundle;
+                }
+            }
+            return null;
+        }
     }
 }
