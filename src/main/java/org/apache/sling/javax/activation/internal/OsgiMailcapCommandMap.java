@@ -40,13 +40,12 @@ import com.sun.activation.registries.MailcapFile;
 /**
  * The <tt>OsgiMailcapCommandMap</tt> is a <tt>CommandMap</tt> which ensures that {@link DataContentHandler} classes are
  * loaded by their containing bundles.
- * 
+ *
  * <p>
  * This allows the javax.activation bundle to obey classloading contraints in an OSGi environment, while preserving most
  * of the functionality available in an unmodified version of the bundle. Notably, this implementation does not support
  * loading <tt>mailcap</tt> files which are not placed inside a bundle.
  * </p>
- * 
  */
 public class OsgiMailcapCommandMap extends MailcapCommandMap {
 
@@ -54,19 +53,17 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
 
     private final Map<Bundle, MailcapFile> db = new HashMap<Bundle, MailcapFile>();
     private final Object sync = new Object();
-    private volatile Caller caller = null;
+    private Caller caller = null;
 
     @Override
-    public void addMailcap(String mailcap) {
+    public synchronized void addMailcap(String mailcap) {
         if (caller == null) {
             caller = new Caller();
         }
         Bundle bundle = caller.get();
         if (bundle != null) {
-            synchronized(sync) {
-                db.computeIfAbsent(bundle, x -> new MailcapFile())
-                        .appendToMailcap(mailcap);
-            }
+            db.computeIfAbsent(bundle, x -> new MailcapFile())
+                    .appendToMailcap(mailcap);
         }
     }
 
@@ -92,7 +89,7 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
     }
 
     @Override
-    public CommandInfo[] getPreferredCommands(String mimeType) {
+    public synchronized CommandInfo[] getPreferredCommands(String mimeType) {
 
         List<CommandInfo> commands = new ArrayList<CommandInfo>();
 
@@ -100,10 +97,8 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
             mimeType = mimeType.toLowerCase(Locale.ENGLISH);
         }
 
-        synchronized (sync) {
-            getPreferredCommands(mimeType, commands, false);
-            getPreferredCommands(mimeType, commands, true);
-        }
+        getPreferredCommands(mimeType, commands, false);
+        getPreferredCommands(mimeType, commands, true);
 
         return commands.toArray(new CommandInfo[commands.size()]);
     }
@@ -131,24 +126,22 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
     }
 
     @Override
-    public CommandInfo[] getAllCommands(String mimeType) {
+    public synchronized CommandInfo[] getAllCommands(String mimeType) {
         List<CommandInfo> commands = new ArrayList<CommandInfo>();
         if (mimeType != null) {
             mimeType = mimeType.toLowerCase(Locale.ENGLISH);
         }
 
-        synchronized (sync) {
-            getAllCommands(mimeType, commands, false);
-            getAllCommands(mimeType, commands, true);
-        }
+        getAllCommands(mimeType, commands, false);
+        getAllCommands(mimeType, commands, true);
 
         return commands.toArray(new CommandInfo[commands.size()]);
     }
 
     private void getAllCommands(String mimeType, List<CommandInfo> accumulator, boolean fallback) {
         for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
-            Map<?, ?> commandMap = fallback ? entry.getValue().getMailcapFallbackList(mimeType) : 
-                entry.getValue() .getMailcapList(mimeType);
+            Map<?, ?> commandMap = fallback ? entry.getValue().getMailcapFallbackList(mimeType) :
+                    entry.getValue().getMailcapList(mimeType);
 
             if (commandMap == null) {
                 continue;
@@ -158,7 +151,7 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
                 String verb = (String) verbAsObject;
 
                 List<?> commands = (List<?>) commandMap.get(verb);
-            
+
                 for (Object command : commands) {
                     accumulator.add(new CommandInfo(verb, (String) command));
                 }
@@ -168,27 +161,25 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
     }
 
     @Override
-    public CommandInfo getCommand(String mimeType, String cmdName) {
+    public synchronized CommandInfo getCommand(String mimeType, String cmdName) {
         if (mimeType != null) {
             mimeType = mimeType.toLowerCase(Locale.ENGLISH);
         }
 
         CommandInfo command = null;
 
-        synchronized (sync) {
-            command = getCommand(mimeType, cmdName, false);
-            if (command != null) {
-                return command;
-            }
-
-            command = getCommand(mimeType, cmdName, true);
+        command = getCommand(mimeType, cmdName, false);
+        if (command != null) {
+            return command;
         }
+
+        command = getCommand(mimeType, cmdName, true);
 
         return command;
     }
-    
+
     private CommandInfo getCommand(String mimeType, String commandName, boolean fallback) {
-        
+
         for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
             Map<?, ?> commandMap = fallback ? entry.getValue().getMailcapFallbackList(mimeType)
                     : entry.getValue().getMailcapList(mimeType);
@@ -205,25 +196,23 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
                 }
             }
         }
-        
+
         return null;
     }
 
     @Override
-    public DataContentHandler createDataContentHandler(String mimeType) {
+    public synchronized DataContentHandler createDataContentHandler(String mimeType) {
         if (mimeType != null) {
             mimeType = mimeType.toLowerCase(Locale.ENGLISH);
         }
 
-        synchronized (sync) {
-            DataContentHandler dch = findDataContentHandler(mimeType, false);
+        DataContentHandler dch = findDataContentHandler(mimeType, false);
 
-            if (dch != null) {
-                return dch;
-            }
-
-            return findDataContentHandler(mimeType, true);
+        if (dch != null) {
+            return dch;
         }
+
+        return findDataContentHandler(mimeType, true);
     }
 
     private DataContentHandler findDataContentHandler(String mimeType, boolean fallback) {
@@ -249,16 +238,14 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
     }
 
     @Override
-    public String[] getMimeTypes() {
+    public synchronized String[] getMimeTypes() {
         List<String> mimeTypesList = new ArrayList<String>();
 
-        synchronized (sync) {
-            for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
-                String[] mimeTypes = entry.getValue().getMimeTypes();
-                for (String mimeType : mimeTypes) {
-                    if (!mimeTypesList.contains(mimeType)) {
-                        mimeTypesList.add(mimeType);
-                    }
+        for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
+            String[] mimeTypes = entry.getValue().getMimeTypes();
+            for (String mimeType : mimeTypes) {
+                if (!mimeTypesList.contains(mimeType)) {
+                    mimeTypesList.add(mimeType);
                 }
             }
         }
@@ -267,20 +254,18 @@ public class OsgiMailcapCommandMap extends MailcapCommandMap {
     }
 
     @Override
-    public String[] getNativeCommands(String mimeType) {
-        List<String> cmdList = new ArrayList<String>();
+    public synchronized String[] getNativeCommands(String mimeType) {
+        List<String> cmdList = new ArrayList<>();
         if (mimeType != null) {
             mimeType = mimeType.toLowerCase(Locale.ENGLISH);
         }
 
-        synchronized (sync) {
-            for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
-                String[] cmds = entry.getValue().getNativeCommands(mimeType);
-                if (cmds != null) {
-                    for (String cmd : cmds) {
-                        if (!cmdList.contains(cmd)) {
-                            cmdList.add(cmd);
-                        }
+        for (Map.Entry<Bundle, MailcapFile> entry : db.entrySet()) {
+            String[] cmds = entry.getValue().getNativeCommands(mimeType);
+            if (cmds != null) {
+                for (String cmd : cmds) {
+                    if (!cmdList.contains(cmd)) {
+                        cmdList.add(cmd);
                     }
                 }
             }
